@@ -5,38 +5,49 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/zombiedevgroup/pokedexcli/internal/pokecache"
 )
-
-type Client struct {
-	baseURL    string
-	httpClient *http.Client
-}
-
-type LocationArea struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
 
 func NewClient() *Client {
 	return &Client{
 		baseURL:    "https://pokeapi.co/api/v2",
 		httpClient: &http.Client{},
+		cache:      pokecache.NewCache(5 * time.Minute),
 	}
 }
 
 func (c *Client) GetLocationArea(id int) (LocationArea, error) {
 	url := fmt.Sprintf("%s/location-area/%d", c.baseURL, id)
-	
+
+	// Check cache first
+	if cached, ok := c.cache.Get(url); ok {
+		var location LocationArea
+		err := json.Unmarshal(cached, &location)
+		if err != nil {
+			return LocationArea{}, err
+		}
+		return location, nil
+	}
+
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return LocationArea{}, err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == 404 {
+		return LocationArea{}, fmt.Errorf("location area %d not found", id)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return LocationArea{}, err
 	}
+
+	// Cache the raw response
+	c.cache.Add(url, body)
 
 	var location LocationArea
 	err = json.Unmarshal(body, &location)
