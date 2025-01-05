@@ -21,26 +21,32 @@ func main() {
 		"exit": {
 			Name:     "exit",
 			Usage:    "exit: Exit the Pokedex",
-			Callback: commands.CommandExit,
+			Callback: func(args []string) error { return commands.CommandExit() },
 		},
 	}
 
 	cliCommands["help"] = commands.Command{
 		Name:     "help",
 		Usage:    "help: Display a help message",
-		Callback: func() error { return commands.CommandHelp(cliCommands) },
+		Callback: func(args []string) error { return commands.CommandHelp(cliCommands) },
 	}
 
 	cliCommands["map"] = commands.Command{
 		Name:     "map",
 		Usage:    "map: Display next page of locations",
-		Callback: commands.CommandMap,
+		Callback: func(args []string) error { return commands.CommandMap() },
 	}
 
 	cliCommands["mapb"] = commands.Command{
 		Name:     "mapb",
 		Usage:    "mapb: Display previous page of locations",
-		Callback: commands.CommandMapb,
+		Callback: func(args []string) error { return commands.CommandMapb() },
+	}
+
+	cliCommands["explore"] = commands.Command{
+		Name:     "explore",
+		Usage:    "explore <location>: Explore a location",
+		Callback: commands.CommandExplore,
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -54,8 +60,10 @@ func main() {
 		}
 
 		commandName := words[0]
+		args := words[1:]
+		
 		if command, ok := cliCommands[commandName]; ok {
-			if err := command.Callback(); err != nil {
+			if err := command.Callback(args); err != nil {
 				fmt.Println(err)
 			}
 		} else {

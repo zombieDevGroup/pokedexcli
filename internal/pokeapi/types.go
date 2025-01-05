@@ -18,3 +18,11 @@ type LocationArea struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
+
+// Encounter represents an encounter in a location area
+type PokemonEncounter struct {
+	Pokemon struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"pokemon"`
+}
