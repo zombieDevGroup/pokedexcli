@@ -49,6 +49,12 @@ func main() {
 		Callback: commands.CommandExplore,
 	}
 
+	cliCommands["catch"] = commands.Command{
+		Name:     "catch",
+		Usage:    "catch <pokemon>: Catch a pokemon",
+		Callback: commands.CommandCatch,
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -61,7 +67,7 @@ func main() {
 
 		commandName := words[0]
 		args := words[1:]
-		
+
 		if command, ok := cliCommands[commandName]; ok {
 			if err := command.Callback(args); err != nil {
 				fmt.Println(err)
