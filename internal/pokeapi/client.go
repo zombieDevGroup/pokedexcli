@@ -99,3 +99,41 @@ func (c *Client) GetEncounters(name string) ([]PokemonEncounter, error) {
 	c.cache.Add(url, body)
 	return locationArea.PokemonEncounters, nil
 }
+
+func (c *Client) GetPokemon(name string) (Pokemon, error) {
+	url := fmt.Sprintf("%s/pokemon/%s", c.baseURL, name)
+
+	// Check cache first
+	if cached, ok := c.cache.Get(url); ok {
+		var pokemon Pokemon
+		err := json.Unmarshal(cached, &pokemon)
+		if err != nil {
+			return Pokemon{}, err
+		}
+		return pokemon, nil
+	}
+
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return Pokemon{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return Pokemon{}, fmt.Errorf("pokemon %s not found", name)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return Pokemon{}, err
+	}
+
+	var pokemon Pokemon
+	err = json.Unmarshal(body, &pokemon)
+	if err != nil {
+		return Pokemon{}, err
+	}
+
+	c.cache.Add(url, body)
+	return pokemon, nil
+}
