@@ -55,6 +55,12 @@ func main() {
 		Callback: commands.CommandCatch,
 	}
 
+	cliCommands["inspect"] = commands.Command{
+		Name:     "inspect",
+		Usage:    "inspect <pokemon>: Inspect a pokemon",
+		Callback: commands.CommandInspect,
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
