@@ -6,7 +6,7 @@ import "github.com/zombiedevgroup/pokedexcli/internal/pokeapi"
 type Command struct {
 	Name     string
 	Usage    string
-	Callback func() error
+	Callback func([]string) error
 }
 
 // Shared state for the commands package

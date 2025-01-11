@@ -57,3 +57,83 @@ func (c *Client) GetLocationArea(id int) (LocationArea, error) {
 
 	return location, nil
 }
+
+func (c *Client) GetEncounters(name string) ([]PokemonEncounter, error) {
+	url := fmt.Sprintf("%s/location-area/%s", c.baseURL, name)
+
+	// Check cache first
+	if cached, ok := c.cache.Get(url); ok {
+		var locationArea struct {
+			PokemonEncounters []PokemonEncounter `json:"pokemon_encounters"`
+		}
+		err := json.Unmarshal(cached, &locationArea)
+		if err != nil {
+			return []PokemonEncounter{}, err
+		}
+		return locationArea.PokemonEncounters, nil
+	}
+
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return []PokemonEncounter{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return []PokemonEncounter{}, fmt.Errorf("location area %s not found", name)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []PokemonEncounter{}, err
+	}
+
+	var locationArea struct {
+		PokemonEncounters []PokemonEncounter `json:"pokemon_encounters"`
+	}
+	err = json.Unmarshal(body, &locationArea)
+	if err != nil {
+		return []PokemonEncounter{}, err
+	}
+
+	c.cache.Add(url, body)
+	return locationArea.PokemonEncounters, nil
+}
+
+func (c *Client) GetPokemon(name string) (Pokemon, error) {
+	url := fmt.Sprintf("%s/pokemon/%s", c.baseURL, name)
+
+	// Check cache first
+	if cached, ok := c.cache.Get(url); ok {
+		var pokemon Pokemon
+		err := json.Unmarshal(cached, &pokemon)
+		if err != nil {
+			return Pokemon{}, err
+		}
+		return pokemon, nil
+	}
+
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return Pokemon{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return Pokemon{}, fmt.Errorf("pokemon %s not found", name)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return Pokemon{}, err
+	}
+
+	var pokemon Pokemon
+	err = json.Unmarshal(body, &pokemon)
+	if err != nil {
+		return Pokemon{}, err
+	}
+
+	c.cache.Add(url, body)
+	return pokemon, nil
+}
