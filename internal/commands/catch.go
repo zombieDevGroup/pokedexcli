@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"math/rand"
+
 	"github.com/zombiedevgroup/pokedexcli/internal/pokedex"
 )
 
@@ -32,5 +33,6 @@ func CommandCatch(args []string) error {
 	pokedex.AddPokemon(pokemonName, pokemon)
 
 	fmt.Printf("%s caught!\n", pokemon.Name)
+	fmt.Println("You may now inspect it with the inspect command.")
 	return nil
 }
